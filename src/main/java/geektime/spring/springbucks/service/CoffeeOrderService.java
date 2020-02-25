@@ -8,36 +8,40 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 @Slf4j
 @Service
-@Transactional
 public class CoffeeOrderService {
-    @Autowired
-    private CoffeeOrderRepository orderRepository;
 
-    public CoffeeOrder createOrder(String customer, Coffee...coffee) {
-        CoffeeOrder order = CoffeeOrder.builder()
+    @Autowired
+    CoffeeOrderRepository coffeeOrderRepository;
+
+    public CoffeeOrder createOrder(String customer, Coffee... coffees){
+
+        CoffeeOrder coffeeOrder = CoffeeOrder.builder()
                 .customer(customer)
-                .items(new ArrayList<>(Arrays.asList(coffee)))
+                .items(new ArrayList<>(Arrays.asList(coffees)))
                 .state(OrderState.INIT)
                 .build();
-        CoffeeOrder saved = orderRepository.save(order);
-        log.info("New Order: {}", saved);
+
+        CoffeeOrder saved = coffeeOrderRepository.save(coffeeOrder);
+        log.info("New order saved: {}", saved);
         return saved;
     }
 
-    public boolean updateState(CoffeeOrder order, OrderState state) {
-        if (state.compareTo(order.getState()) <= 0) {
-            log.warn("Wrong State order: {}, {}", state, order.getState());
+
+    public boolean updateState(CoffeeOrder order, OrderState state){
+        if(order.getState().compareTo(state) >= 0){
+            log.warn("Wrong state, old state: {}  new state: {}" , order.getState(), state);
             return false;
         }
+
         order.setState(state);
-        orderRepository.save(order);
-        log.info("Updated Order: {}", order);
+        CoffeeOrder saved = coffeeOrderRepository.save(order);
+        log.info("Update order: {}", saved);
         return true;
     }
+
 }
